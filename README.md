@@ -11,6 +11,13 @@ By backpropagating on the loss function i could tune the weights of each neuron 
 ﻿![billede](https://github.com/gbalslevn/gradeGuesser/assets/97167089/b62499eb-187a-4585-81be-264c9236076b)
 
 ### Demo
+
 Quickly implemented a GUI to visualize the questions and result. 
-I could improve understandability of the answer options but i didnt focus on that. You can read what the different options mean on the [link from UCI](https://archive.ics.uci.edu/dataset/320/student+performance).
-(https://github.com/gbalslevn/gradeGuesser/assets/97167089/4f475fca-09b6-463e-bb61-9241a39a6b0e)
+
+![Click here for demo](assets/97167089/4f475fca-09b6-463e-bb61-9241a39a6b0e)
+
+
+I could improve understandability of the answer options but i didnt focus on that. You can read what the different answer options mean on the [UCI](https://archive.ics.uci.edu/dataset/320/student+performance).
+
+
+
