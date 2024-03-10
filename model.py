@@ -1,9 +1,7 @@
-import random
 import numpy as np
 from motor import Value
 from hjernen import Neuron, Layer, MLP
 import pandas as pd
-import math
 
 
 from ucimlrepo import fetch_ucirepo 
@@ -11,17 +9,18 @@ from ucimlrepo import fetch_ucirepo
   
 # fetch dataset 
 student_performance = fetch_ucirepo(id=320) 
-selected_features = student_performance.data.features[['age', 'Medu', 'Fedu', 'traveltime', 'studytime', 'goout', 'Dalc']] # famsup og sex er fjernet for nu
+selected_features = student_performance.data.features[['age', 'Medu', 'Fedu', 'traveltime', 'studytime', 'goout', 'Dalc']] # Fetch interesting features from data
 # data (as pandas dataframes) 
 X = pd.DataFrame(selected_features).values # Inputs
-y = pd.DataFrame(student_performance.data.targets).iloc[:, -1].values # Only take the last coloumn of grades. The G3. y is goals. 
+y = pd.DataFrame(student_performance.data.targets).iloc[:, -1].values # Goals. Only take the last coloumn of grades. The G3. y is. 
 
 # initialize a model 
-model = MLP(7, [10, 10, 10, 20]) # The neural network
-#model.load_weights('weights.json') 
+model = MLP(7, [2, 20]) # The neural network
+model.load_weights('weights.json') 
 print("number of parameters", len(model.parameters()))
 
 # loss function
+# Todo: Part this into smaller methods
 def loss(batch_size=None):
     # inline DataLoader :)
     if batch_size is None: # use the entire dataset (X, y) without batching.
@@ -51,11 +50,12 @@ def loss(batch_size=None):
     softmax_probs_clipped = np.clip(softmax_probs, 1e-7, 1 - 1e-7)
     cross_entropy_loss = -np.sum(y_onehot * np.log(softmax_probs_clipped), axis=1) ## Find the certency of the right answer and take log of it. Finds for each row. Right answer * models probability that this is the right answer. Sum because of one hot. 1*0.3+0*0.3+0*0.3 = 0.3. 
     average_loss = np.mean(cross_entropy_loss) 
+    print(average_loss)
 
-    # L2 regularization
+    # L2 regularization - Smoothing
     alpha = 1e-4
-    reg_loss = alpha * sum((p*p for p in model.parameters()))
-    total_loss = average_loss + reg_loss # How well the neural net is performing
+    reg_loss = (alpha * sum((p*p for p in model.parameters())))/len(model.parameters()) 
+    total_loss = average_loss + 0.01 * reg_loss # How well the neural net is performing. if reg_loss is too big weights will be very uniform 
 
     # also get accuracy
     predicted_labels = np.argmax(softmax_probs, axis=1, keepdims=True)
@@ -64,9 +64,10 @@ def loss(batch_size=None):
 
 #total_loss, acc = loss()
 #print(total_loss, acc)
+#print(model.layers[0].neurons[0].w)
 
 # optimization
-for k in range(5):
+for k in range(25):
     
     # forward
     total_loss, acc = loss()
@@ -76,8 +77,9 @@ for k in range(5):
     total_loss.backward()
     learning_rate = 1.0 - 0.9*k/100
     for p in model.parameters():
-        p.data -= learning_rate * p.grad
+        p.data -= 50 * p.grad # use big numbers to change the weights in the beginning. Else it could seem like there is no effect. Esp for big datasets
     if k % 1 == 0:
+        #print(model.layers[0].neurons[0].w)
         print(f"step {k} loss {total_loss.data}, accuracy {acc*100}%")
 model.save_weights('weights.json')
 
@@ -96,4 +98,7 @@ model.save_weights('weights.json')
 # goout - Hvor ofte tager du i byen
 # Dalc - Hvor mange øl drikker du om dage?
 
+
+# Datatypen skal være float
+# Måske har jeg sværere ved at træne fordi der er så meget data. At skulle tilpasse en model til så meget er sværere end at tilpasse til et enkelt eller ti datapunkter
 
